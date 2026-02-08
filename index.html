@@ -1,0 +1,1758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharma Book - Prescrição Farmacêutica</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .app-container {
+            max-width: 430px;
+            margin: 0 auto;
+            background: white;
+            min-height: 100vh;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 50px;
+            height: 50px;
+            background: white;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .app-title {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            padding: 15px 20px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .icon-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: #f3f4f6;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .icon-btn:hover {
+            background: #e5e7eb;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #111827;
+        }
+
+        .system-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .system-card {
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .system-card:hover {
+            border-color: #10b981;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
+        }
+
+        .system-card.respiratory { background: #dbeafe; border-color: #93c5fd; }
+        .system-card.gastro { background: #fef3c7; border-color: #fcd34d; }
+        .system-card.dermato { background: #fecdd3; border-color: #fda4af; }
+        .system-card.neuro { background: #e9d5ff; border-color: #d8b4fe; }
+
+        .system-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .system-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .system-count {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .condition-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .condition-item {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            border: 1px solid #e5e7eb;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .condition-item:hover {
+            border-color: #10b981;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+        }
+
+        .condition-icon {
+            width: 24px;
+            height: 24px;
+            color: #9ca3af;
+        }
+
+        .condition-content {
+            flex: 1;
+        }
+
+        .condition-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .condition-desc {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 10px;
+            margin: -10px;
+        }
+
+        .detail-header {
+            padding: 20px;
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+
+        .condition-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        .condition-definition {
+            font-size: 15px;
+            color: #4b5563;
+            line-height: 1.5;
+        }
+
+        .section-box {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-box.blue { background: #eff6ff; }
+        .section-box.green { background: #f0fdf4; }
+        .section-box.yellow { background: #fefce8; }
+        .section-box.red { background: #fef2f2; }
+        .section-box.purple { background: #faf5ff; }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .section-name {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .list-item {
+            padding: 8px 0;
+            font-size: 15px;
+            line-height: 1.5;
+            color: #374151;
+        }
+
+        .list-item::before {
+            content: "•";
+            color: #10b981;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .checkbox-item:hover {
+            background: #f9fafb;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-top: 2px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            flex: 1;
+            font-size: 15px;
+            line-height: 1.5;
+            cursor: pointer;
+        }
+
+        .medication-card {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+
+        .medication-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #065f46;
+            margin-bottom: 12px;
+        }
+
+        .medication-detail {
+            margin-bottom: 8px;
+        }
+
+        .medication-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #047857;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .medication-value {
+            font-size: 16px;
+            color: #065f46;
+            margin-top: 2px;
+        }
+
+        .medication-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            color: #047857;
+            margin-top: 8px;
+        }
+
+        .button {
+            width: 100%;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .button-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .button-primary:hover {
+            background: #059669;
+        }
+
+        .button-secondary {
+            background: white;
+            color: #10b981;
+            border: 2px solid #10b981;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 15px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #10b981;
+        }
+
+        .input-with-button {
+            display: flex;
+            gap: 8px;
+        }
+
+        .input-with-button .form-input {
+            flex: 1;
+        }
+
+        .whatsapp-btn {
+            padding: 12px 16px;
+            background: #25d366;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .whatsapp-btn:hover {
+            background: #128c7e;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 10px 20px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            white-space: nowrap;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .tab-button.active {
+            background: #10b981;
+            color: white;
+            border-color: #10b981;
+        }
+
+        .preview-section {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .preview-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .preview-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .alert-box {
+            background: #fef2f2;
+            border: 2px solid #fca5a5;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .alert-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #dc2626;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .alert-text {
+            font-size: 14px;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // ========================================
+        // CONFIGURAÇÃO DA SENHA - MUDE AQUI!
+        // ========================================
+        const SENHA_CORRETA = "farmacia2025";  // ← MUDE PARA SUA SENHA
+        
+        // ========================================
+        // COMPONENTE DE LOGIN
+        // ========================================
+        function LoginScreen({ onLogin }) {
+            const [senha, setSenha] = useState('');
+            const [erro, setErro] = useState(false);
+            
+            const handleLogin = (e) => {
+                e.preventDefault();
+                if (senha === SENHA_CORRETA) {
+                    localStorage.setItem('pharmabook_auth', 'true');
+                    onLogin();
+                } else {
+                    setErro(true);
+                    setTimeout(() => setErro(false), 2000);
+                }
+            };
+            
+            return (
+                <div style={{
+                    minHeight: '100vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    padding: '20px'
+                }}>
+                    <div style={{
+                        background: 'white',
+                        borderRadius: '20px',
+                        padding: '40px',
+                        maxWidth: '400px',
+                        width: '100%',
+                        boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+                    }}>
+                        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                            <div style={{
+                                width: '80px',
+                                height: '80px',
+                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                borderRadius: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '40px',
+                                margin: '0 auto 20px'
+                            }}>💊</div>
+                            <h1 style={{
+                                fontSize: '28px',
+                                fontWeight: '700',
+                                color: '#111827',
+                                marginBottom: '8px'
+                            }}>PHARMA BOOK</h1>
+                            <p style={{ fontSize: '14px', color: '#6b7280' }}>
+                                Sistema de Prescrição Farmacêutica
+                            </p>
+                        </div>
+                        
+                        <form onSubmit={handleLogin}>
+                            <div style={{ marginBottom: '20px' }}>
+                                <label style={{
+                                    display: 'block',
+                                    fontSize: '14px',
+                                    fontWeight: '600',
+                                    color: '#374151',
+                                    marginBottom: '8px'
+                                }}>🔐 Senha de Acesso</label>
+                                <input
+                                    type="password"
+                                    value={senha}
+                                    onChange={(e) => setSenha(e.target.value)}
+                                    placeholder="Digite a senha"
+                                    autoFocus
+                                    style={{
+                                        width: '100%',
+                                        padding: '14px',
+                                        border: erro ? '2px solid #ef4444' : '2px solid #e5e7eb',
+                                        borderRadius: '10px',
+                                        fontSize: '16px',
+                                        outline: 'none',
+                                        transition: 'all 0.2s'
+                                    }}
+                                />
+                                {erro && (
+                                    <p style={{
+                                        color: '#ef4444',
+                                        fontSize: '13px',
+                                        marginTop: '8px',
+                                        fontWeight: '500'
+                                    }}>❌ Senha incorreta!</p>
+                                )}
+                            </div>
+                            
+                            <button type="submit" style={{
+                                width: '100%',
+                                padding: '14px',
+                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '10px',
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                transition: 'all 0.2s'
+                            }}>
+                                🚀 ENTRAR
+                            </button>
+                        </form>
+                        
+                        <p style={{
+                            textAlign: 'center',
+                            fontSize: '11px',
+                            color: '#9ca3af',
+                            marginTop: '20px'
+                        }}>Acesso restrito • Farmácia Resumida</p>
+                    </div>
+                </div>
+            );
+        }
+
+        // Dados das condições
+        const conditionsData = {
+            "alergia-pele": {
+                system: "Sistema Dermatológico",
+                name: "Alergia de Pele",
+                definition: "Reação de hipersensibilidade cutânea caracterizada por urticária, prurido e/ou angioedema, causada por exposição a alérgenos diversos.",
+                causes: [
+                    "Alimentos (frutos do mar, amendoim, leite)",
+                    "Medicamentos (antibióticos, AINEs)",
+                    "Picadas de inseto",
+                    "Contato com substâncias (látex, níquel, cosméticos)"
+                ],
+                objectives: [
+                    "Aliviar prurido",
+                    "Reduzir edema e eritema",
+                    "Prevenir progressão para anafilaxia",
+                    "Identificar e evitar alérgeno"
+                ],
+                symptoms: [
+                    "Placas eritematosas elevadas (urticária)",
+                    "Prurido intenso",
+                    "Edema localizado ou difuso",
+                    "Pode haver sensação de queimação"
+                ],
+                alertSigns: [
+                    "Dificuldade respiratória ou estridor",
+                    "Edema de língua, lábios ou face (angioedema grave)",
+                    "Hipotensão ou taquicardia",
+                    "Rouquidão ou sensação de garganta fechando",
+                    "Tontura, confusão ou síncope",
+                    "Lesões bolhosas ou descamativas"
+                ],
+                referralCriteria: [
+                    "Qualquer sinal de anafilaxia",
+                    "Urticária persistente >48h apesar de tratamento",
+                    "Angioedema progressivo",
+                    "Sintomas sistêmicos associados",
+                    "Lesões sugestivas de reações graves (Stevens-Johnson)"
+                ],
+                medications: [
+                    {
+                        name: "Loratadina",
+                        concentration: "10mg",
+                        posology: "1 comprimido ao dia",
+                        duration: "Até 5 dias",
+                        mip: true
+                    },
+                    {
+                        name: "Cetirizina",
+                        concentration: "10mg",
+                        posology: "1 comprimido ao dia",
+                        duration: "Até 5 dias",
+                        mip: true
+                    },
+                    {
+                        name: "Dexclorfeniramina",
+                        concentration: "2mg",
+                        posology: "1 comprimido 3x ao dia",
+                        duration: "Até 5 dias",
+                        mip: true
+                    }
+                ],
+                nonPharmacological: [
+                    "Compressas frias para alívio do prurido",
+                    "Banhos com aveia coloidal",
+                    "Evitar coçar (risco de lesões e infecção)",
+                    "Roupas leves de algodão",
+                    "Evitar calor e suor excessivo",
+                    "Identificar e eliminar gatilho alérgeno"
+                ],
+                patientGuidance: [
+                    "Tomar anti-histamínico conforme orientado",
+                    "Evitar banhos muito quentes",
+                    "Manter diário alimentar se suspeita de alergia alimentar",
+                    "Procurar atendimento urgente se houver falta de ar ou inchaço de face"
+                ],
+                expectedImprovement: "Melhora do prurido e redução das lesões em 24-48h.",
+                whenToReturn: "Retornar se não houver melhora em 48h ou se surgirem novos sintomas.",
+                emergencyReferral: "Buscar atendimento emergencial imediatamente se desenvolver falta de ar, inchaço de língua/garganta ou tontura.",
+                clinicalPearls: [
+                    "Cetirizina pode causar mais sonolência que loratadina",
+                    "Urticária pode persistir até 6 semanas (urticária crônica requer investigação)",
+                    "Manter epinefrina auto-injetável se história de anafilaxia prévia",
+                    "Orientar sobre leitura de rótulos de alimentos/medicamentos"
+                ]
+            },
+            "resfriado-comum": {
+                system: "Sistema Respiratório",
+                name: "Resfriado Comum",
+                definition: "Infecção viral aguda e autolimitada das vias aéreas superiores, causando congestão nasal, coriza, espirros e mal-estar.",
+                causes: [
+                    "Rinovírus (mais comum)",
+                    "Coronavírus",
+                    "Adenovírus",
+                    "Vírus Sincicial Respiratório"
+                ],
+                objectives: [
+                    "Aliviar sintomas nasais",
+                    "Reduzir desconforto",
+                    "Prevenir complicações",
+                    "Manter hidratação"
+                ],
+                symptoms: [
+                    "Coriza clara ou espessa",
+                    "Congestão nasal",
+                    "Espirros",
+                    "Dor de garganta leve",
+                    "Tosse seca",
+                    "Mal-estar leve"
+                ],
+                alertSigns: [
+                    "Febre >38.5°C por >3 dias",
+                    "Dificuldade respiratória",
+                    "Dor no peito",
+                    "Secreção nasal purulenta persistente",
+                    "Piora após 5-7 dias"
+                ],
+                referralCriteria: [
+                    "Sintomas graves ou progressivos",
+                    "Febre alta persistente",
+                    "Suspeita de sinusite bacteriana",
+                    "Imunossuprimidos",
+                    "Comorbidades respiratórias"
+                ],
+                medications: [
+                    {
+                        name: "Dipirona",
+                        concentration: "500mg",
+                        posology: "1 comprimido até 4x ao dia",
+                        duration: "Enquanto houver sintomas (máx 5 dias)",
+                        mip: true
+                    },
+                    {
+                        name: "Paracetamol",
+                        concentration: "750mg",
+                        posology: "1 comprimido até 4x ao dia",
+                        duration: "Enquanto houver sintomas (máx 5 dias)",
+                        mip: true
+                    }
+                ],
+                nonPharmacological: [
+                    "Repouso adequado",
+                    "Hidratação abundante (água, chás, sopas)",
+                    "Inalação com soro fisiológico",
+                    "Lavagem nasal com soro fisiológico",
+                    "Umidificação do ambiente",
+                    "Evitar ambientes com ar condicionado muito frio"
+                ],
+                patientGuidance: [
+                    "Cobrir boca e nariz ao tossir/espirrar",
+                    "Lavar mãos frequentemente",
+                    "Descartar lenços usados adequadamente",
+                    "Evitar compartilhar objetos pessoais"
+                ],
+                expectedImprovement: "Melhora gradual em 7-10 dias. Sintomas mais intensos nos primeiros 3 dias.",
+                whenToReturn: "Se piorar após 3 dias ou não melhorar em 10 dias.",
+                emergencyReferral: "Buscar atendimento se desenvolver falta de ar, febre alta persistente ou confusão mental.",
+                clinicalPearls: [
+                    "Antibióticos não são indicados (infecção viral)",
+                    "Vitamina C pode reduzir duração em 1 dia",
+                    "Xaropes expectorantes têm eficácia limitada",
+                    "Descongestionantes nasais: usar no máximo 3 dias"
+                ]
+            },
+            "diarreia-aguda": {
+                system: "Sistema Gastrointestinal",
+                name: "Diarreia Aguda",
+                definition: "Aumento da frequência evacuatória (≥3 vezes/dia) com fezes amolecidas ou líquidas, de início súbito, geralmente autolimitada.",
+                causes: [
+                    "Infecções virais (rotavírus, norovírus)",
+                    "Bactérias (E. coli, Salmonella, Shigella)",
+                    "Intoxicação alimentar",
+                    "Medicamentos"
+                ],
+                objectives: [
+                    "Prevenir desidratação",
+                    "Repor eletrólitos",
+                    "Reduzir duração dos sintomas",
+                    "Evitar complicações"
+                ],
+                symptoms: [
+                    "Fezes líquidas ou amolecidas",
+                    "Cólicas abdominais",
+                    "Náuseas",
+                    "Urgência evacuatória"
+                ],
+                alertSigns: [
+                    "Sangue nas fezes",
+                    "Febre >38.5°C",
+                    "Sinais de desidratação grave",
+                    "Dor abdominal intensa",
+                    "Vômitos persistentes"
+                ],
+                referralCriteria: [
+                    "Diarreia com sangue",
+                    "Desidratação moderada a grave",
+                    "Duração >3 dias sem melhora",
+                    "Grupos de risco (crianças <2 anos, idosos, imunossuprimidos)"
+                ],
+                medications: [
+                    {
+                        name: "Sais de Reidratação Oral",
+                        concentration: "Sachê",
+                        posology: "1 sachê diluído em 1L água, beber ao longo do dia",
+                        duration: "Enquanto houver diarreia",
+                        mip: true
+                    },
+                    {
+                        name: "Racecadotrila",
+                        concentration: "100mg",
+                        posology: "1 cápsula 3x ao dia",
+                        duration: "Até 3 dias",
+                        mip: true
+                    }
+                ],
+                nonPharmacological: [
+                    "Hidratação constante (água, água de coco, chás)",
+                    "Dieta leve (arroz, banana, maçã, torradas)",
+                    "Evitar leite e derivados temporariamente",
+                    "Evitar alimentos gordurosos e condimentados",
+                    "Higiene rigorosa das mãos"
+                ],
+                patientGuidance: [
+                    "Beber pequenos goles frequentemente",
+                    "Evitar refrigerantes e sucos industrializados",
+                    "Manter higiene adequada",
+                    "Observar sinais de desidratação (boca seca, urina escura)"
+                ],
+                expectedImprovement: "Melhora em 2-3 dias. Hidratação é fundamental.",
+                whenToReturn: "Se não melhorar em 3 dias, piorar ou apresentar desidratação.",
+                emergencyReferral: "Buscar atendimento imediato se houver desidratação grave, sangue nas fezes ou febre alta.",
+                clinicalPearls: [
+                    "SRO é mais eficaz que água pura",
+                    "Probióticos podem reduzir duração",
+                    "Loperamida não é recomendada em diarreia infecciosa",
+                    "Zinc suplementação em crianças reduz gravidade"
+                ]
+            },
+            "cefaleia-tensional": {
+                system: "Sistema Neurológico",
+                name: "Cefaleia Tensional",
+                definition: "Dor de cabeça primária caracterizada por dor leve a moderada, em aperto ou pressão, bilateral, sem sintomas associados graves.",
+                causes: [
+                    "Estresse e ansiedade",
+                    "Tensão muscular cervical",
+                    "Má postura",
+                    "Privação de sono",
+                    "Fadiga visual"
+                ],
+                objectives: [
+                    "Aliviar dor",
+                    "Relaxar musculatura",
+                    "Identificar gatilhos",
+                    "Prevenir cronificação"
+                ],
+                symptoms: [
+                    "Dor bilateral em pressão/aperto",
+                    "Intensidade leve a moderada",
+                    "Não piora com atividade física",
+                    "Duração de 30 min a 7 dias"
+                ],
+                alertSigns: [
+                    "Início súbito e severo ('pior dor da vida')",
+                    "Febre, rigidez de nuca",
+                    "Alterações visuais, neurológicas ou motoras",
+                    "Dor que acorda à noite",
+                    "Mudança no padrão habitual"
+                ],
+                referralCriteria: [
+                    "Sinais de alerta presentes",
+                    "Cefaleia refratária ao tratamento",
+                    "Frequência >15 dias/mês",
+                    "Necessidade de investigação"
+                ],
+                medications: [
+                    {
+                        name: "Paracetamol",
+                        concentration: "750mg",
+                        posology: "1 comprimido até 4x ao dia",
+                        duration: "Conforme necessário (máx 3 dias seguidos)",
+                        mip: true
+                    },
+                    {
+                        name: "Dipirona",
+                        concentration: "500mg",
+                        posology: "1 comprimido até 4x ao dia",
+                        duration: "Conforme necessário (máx 3 dias seguidos)",
+                        mip: true
+                    },
+                    {
+                        name: "Ibuprofeno",
+                        concentration: "400mg",
+                        posology: "1 comprimido até 3x ao dia",
+                        duration: "Conforme necessário (máx 3 dias seguidos)",
+                        mip: true
+                    }
+                ],
+                nonPharmacological: [
+                    "Repouso em ambiente calmo e escuro",
+                    "Compressas frias ou quentes no pescoço",
+                    "Massagem cervical suave",
+                    "Técnicas de relaxamento e respiração",
+                    "Alongamentos cervicais",
+                    "Corrigir postura"
+                ],
+                patientGuidance: [
+                    "Evitar uso excessivo de analgésicos (risco de cefaleia por abuso)",
+                    "Manter rotina de sono regular",
+                    "Gerenciar estresse",
+                    "Pausas durante trabalho em computador"
+                ],
+                expectedImprovement: "Alívio em 30min-2h após medicação.",
+                whenToReturn: "Se cefaleia persistir >3 dias, aumentar frequência ou não responder ao tratamento.",
+                emergencyReferral: "Buscar atendimento urgente se apresentar sinais de alerta.",
+                clinicalPearls: [
+                    "Uso frequente de analgésicos pode causar cefaleia rebote",
+                    "Exercícios regulares previnem episódios",
+                    "Cafeína em excesso pode ser gatilho",
+                    "Terapia cognitivo-comportamental é eficaz"
+                ]
+            },
+            "azia-ma-digestao": {
+                system: "Sistema Gastrointestinal",
+                name: "Azia e Má Digestão",
+                definition: "Sensação de queimação retroesternal e/ou desconforto epigástrico após alimentação, geralmente relacionado ao refluxo ácido ou dispepsia funcional.",
+                causes: [
+                    "Refluxo gastroesofágico",
+                    "Alimentação inadequada",
+                    "Excesso de gordura/condimentos",
+                    "Estresse",
+                    "Medicamentos (AINEs)"
+                ],
+                objectives: [
+                    "Aliviar sintomas",
+                    "Reduzir acidez gástrica",
+                    "Prevenir recorrência",
+                    "Orientar mudanças de hábitos"
+                ],
+                symptoms: [
+                    "Queimação retroesternal (pirose)",
+                    "Regurgitação ácida",
+                    "Desconforto epigástrico",
+                    "Sensação de estômago cheio",
+                    "Náusea leve"
+                ],
+                alertSigns: [
+                    "Dor torácica intensa ou irradiada",
+                    "Dificuldade para engolir",
+                    "Vômitos persistentes ou com sangue",
+                    "Perda de peso inexplicada",
+                    "Anemia"
+                ],
+                referralCriteria: [
+                    "Sinais de alarme presentes",
+                    "Sintomas refratários >2 semanas",
+                    "Necessidade de investigação endoscópica",
+                    "Uso crônico de antiácidos sem melhora"
+                ],
+                medications: [
+                    {
+                        name: "Omeprazol",
+                        concentration: "20mg",
+                        posology: "1 cápsula ao dia em jejum",
+                        duration: "Até 14 dias",
+                        mip: true
+                    },
+                    {
+                        name: "Hidróxido de Alumínio + Hidróxido de Magnésio",
+                        concentration: "Suspensão oral",
+                        posology: "10ml até 4x ao dia",
+                        duration: "Conforme necessário (máx 7 dias)",
+                        mip: true
+                    },
+                    {
+                        name: "Ranitidina",
+                        concentration: "150mg",
+                        posology: "1 comprimido 2x ao dia",
+                        duration: "Até 14 dias",
+                        mip: true
+                    }
+                ],
+                nonPharmacological: [
+                    "Evitar deitar logo após refeições (esperar 2-3h)",
+                    "Elevar cabeceira da cama 15-20cm",
+                    "Refeições menores e mais frequentes",
+                    "Evitar alimentos gatilho (frituras, café, chocolate, menta, álcool)",
+                    "Mastigar bem os alimentos",
+                    "Perder peso se necessário",
+                    "Evitar roupas apertadas"
+                ],
+                patientGuidance: [
+                    "Tomar omeprazol em jejum, 30min antes do café",
+                    "Evitar cigarro e álcool",
+                    "Identificar alimentos que pioram sintomas",
+                    "Reduzir estresse"
+                ],
+                expectedImprovement: "Melhora em 2-3 dias com medicação e mudanças alimentares.",
+                whenToReturn: "Se não melhorar em 2 semanas ou sintomas piorarem.",
+                emergencyReferral: "Buscar atendimento se dor torácica intensa, vômitos com sangue ou dificuldade de engolir.",
+                clinicalPearls: [
+                    "Omeprazol: eficácia máxima após 3-4 dias de uso",
+                    "Antiácidos: alívio rápido mas curta duração",
+                    "H. pylori pode causar dispepsia (investigar se refratário)",
+                    "Evitar AINEs se possível"
+                ]
+            }
+        };
+
+        function App() {
+            // ========================================
+            // VERIFICAÇÃO DE AUTENTICAÇÃO
+            // ========================================
+            const [autenticado, setAutenticado] = useState(
+                localStorage.getItem('pharmabook_auth') === 'true'
+            );
+            
+            // Se não estiver autenticado, mostra tela de login
+            if (!autenticado) {
+                return <LoginScreen onLogin={() => setAutenticado(true)} />;
+            }
+            
+            // ========================================
+            // RESTO DO APP (após login bem-sucedido)
+            // ========================================
+            const [view, setView] = useState('home'); // home, conditions, detail, prescription
+            const [selectedSystem, setSelectedSystem] = useState(null);
+            const [selectedCondition, setSelectedCondition] = useState(null);
+            const [selectedMedications, setSelectedMedications] = useState([]);
+            const [selectedNonPharma, setSelectedNonPharma] = useState([]);
+            const [selectedGuidance, setSelectedGuidance] = useState([]);
+            const [showModal, setShowModal] = useState(false);
+            const [modalType, setModalType] = useState(''); // 'patient' or 'pharmacist'
+            const [pharmacistData, setPharmacistData] = useState({
+                name: '',
+                crf: '',
+                crfState: '',
+                specialty: '',
+                whatsapp: ''
+            });
+            const [patientData, setPatientData] = useState({
+                name: '',
+                cpf: '',
+                birthdate: '',
+                phone: ''
+            });
+
+            const systems = [
+                { id: 'respiratory', name: 'Sistema Respiratório', icon: '🫁', count: 1, color: 'respiratory' },
+                { id: 'gastro', name: 'Sistema Gastrointestinal', icon: '🔄', count: 2, color: 'gastro' },
+                { id: 'dermato', name: 'Sistema Dermatológico', icon: '✨', count: 1, color: 'dermato' },
+                { id: 'neuro', name: 'Sistema Neurológico', icon: '🧠', count: 1, color: 'neuro' }
+            ];
+
+            const conditions = {
+                'respiratory': [
+                    { id: 'resfriado-comum', name: 'Resfriado Comum', desc: 'Infecção viral aguda e autolimitada das vias aéreas...' }
+                ],
+                'gastro': [
+                    { id: 'diarreia-aguda', name: 'Diarreia Aguda', desc: 'Aumento da frequência evacuatória (≥3 vezes/dia)...' },
+                    { id: 'azia-ma-digestao', name: 'Azia e Má Digestão', desc: 'Sensação de queimação retroesternal e/ou desconforto...' }
+                ],
+                'dermato': [
+                    { id: 'alergia-pele', name: 'Alergia de Pele', desc: 'Reação de hipersensibilidade cutânea caracterizada...' }
+                ],
+                'neuro': [
+                    { id: 'cefaleia-tensional', name: 'Cefaleia Tensional', desc: 'Dor de cabeça primária caracterizada por dor leve...' }
+                ]
+            };
+
+            const handleSystemClick = (systemId) => {
+                setSelectedSystem(systemId);
+                setView('conditions');
+            };
+
+            const handleConditionClick = (conditionId) => {
+                setSelectedCondition(conditionId);
+                setSelectedMedications([]);
+                setSelectedNonPharma([]);
+                setSelectedGuidance([]);
+                setView('detail');
+            };
+
+            const toggleMedication = (index) => {
+                setSelectedMedications(prev => 
+                    prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+                );
+            };
+
+            const toggleNonPharma = (index) => {
+                setSelectedNonPharma(prev => 
+                    prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+                );
+            };
+
+            const toggleGuidance = (index) => {
+                setSelectedGuidance(prev => 
+                    prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+                );
+            };
+
+            const openWhatsApp = (phone) => {
+                const cleanPhone = phone.replace(/\D/g, '');
+                window.open(`https://wa.me/55${cleanPhone}`, '_blank');
+            };
+
+            const generatePDF = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const condition = conditionsData[selectedCondition];
+                
+                // Logo e Título
+                doc.setFillColor(16, 185, 129);
+                doc.rect(0, 0, 210, 40, 'F');
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(24);
+                doc.setFont(undefined, 'bold');
+                doc.text('PHARMA BOOK', 105, 20, { align: 'center' });
+                doc.setFontSize(12);
+                doc.text('Prescrição Farmacêutica', 105, 28, { align: 'center' });
+                
+                doc.setTextColor(0, 0, 0);
+                let y = 50;
+
+                // Dados do Farmacêutico
+                doc.setFontSize(14);
+                doc.setFont(undefined, 'bold');
+                doc.text('FARMACÊUTICO', 20, y);
+                y += 8;
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Nome: ${pharmacistData.name}`, 20, y);
+                y += 6;
+                doc.text(`CRF: ${pharmacistData.crf}/${pharmacistData.crfState}`, 20, y);
+                y += 6;
+                doc.text(`Especialidade: ${pharmacistData.specialty}`, 20, y);
+                y += 10;
+
+                // Dados do Paciente
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(14);
+                doc.text('PACIENTE', 20, y);
+                y += 8;
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text(`Nome: ${patientData.name}`, 20, y);
+                y += 6;
+                doc.text(`CPF: ${patientData.cpf}`, 20, y);
+                y += 6;
+                doc.text(`Data de Nascimento: ${patientData.birthdate}`, 20, y);
+                y += 6;
+                doc.text(`Telefone: ${patientData.phone}`, 20, y);
+                y += 10;
+
+                // Prescrição
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(14);
+                doc.text('PRESCRIÇÃO', 20, y);
+                y += 8;
+                
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(12);
+                doc.text(`Condição: ${condition.name}`, 20, y);
+                y += 8;
+
+                // Medicamentos
+                if (selectedMedications.length > 0) {
+                    doc.setFont(undefined, 'bold');
+                    doc.setFontSize(11);
+                    doc.text('MEDICAMENTOS:', 20, y);
+                    y += 6;
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(10);
+                    
+                    selectedMedications.forEach(index => {
+                        const med = condition.medications[index];
+                        doc.text(`• ${med.name} ${med.concentration}`, 25, y);
+                        y += 5;
+                        doc.text(`  ${med.posology} - ${med.duration}`, 25, y);
+                        y += 7;
+                    });
+                }
+
+                // Orientações Não Farmacológicas
+                if (selectedNonPharma.length > 0) {
+                    y += 3;
+                    doc.setFont(undefined, 'bold');
+                    doc.setFontSize(11);
+                    doc.text('ORIENTAÇÕES NÃO FARMACOLÓGICAS:', 20, y);
+                    y += 6;
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(10);
+                    
+                    selectedNonPharma.forEach(index => {
+                        const text = condition.nonPharmacological[index];
+                        doc.text(`• ${text}`, 25, y);
+                        y += 6;
+                    });
+                }
+
+                // Orientações ao Paciente
+                if (selectedGuidance.length > 0) {
+                    y += 3;
+                    doc.setFont(undefined, 'bold');
+                    doc.setFontSize(11);
+                    doc.text('ORIENTAÇÕES AO PACIENTE:', 20, y);
+                    y += 6;
+                    doc.setFont(undefined, 'normal');
+                    doc.setFontSize(10);
+                    
+                    selectedGuidance.forEach(index => {
+                        const text = condition.patientGuidance[index];
+                        doc.text(`• ${text}`, 25, y);
+                        y += 6;
+                    });
+                }
+
+                // Disclaimer
+                y += 10;
+                doc.setFontSize(8);
+                doc.setTextColor(100, 100, 100);
+                const disclaimer = "Este documento constitui orientação farmacêutica conforme Resolução CFF 586/2013. Não substitui prescrição médica. Medicamentos isentos de prescrição (MIP) validados pela ANVISA.";
+                const splitDisclaimer = doc.splitTextToSize(disclaimer, 170);
+                doc.text(splitDisclaimer, 20, y);
+
+                // Data
+                const today = new Date().toLocaleDateString('pt-BR');
+                doc.text(`Data: ${today}`, 20, 280);
+
+                doc.save('prescricao-pharmabook.pdf');
+            };
+
+            const canGeneratePDF = () => {
+                return pharmacistData.name && pharmacistData.crf && 
+                       patientData.name && patientData.cpf &&
+                       (selectedMedications.length > 0 || selectedNonPharma.length > 0);
+            };
+
+            // Render Home
+            if (view === 'home') {
+                return (
+                    <div className="app-container">
+                        <div className="header">
+                            <div className="logo">💊</div>
+                            <div className="app-title">PHARMA BOOK</div>
+                        </div>
+                        <div className="content">
+                            <div className="section-title">Sistemas do Corpo</div>
+                            <div className="system-grid">
+                                {systems.map(system => (
+                                    <div 
+                                        key={system.id}
+                                        className={`system-card ${system.color}`}
+                                        onClick={() => handleSystemClick(system.id)}
+                                    >
+                                        <div className="system-icon">{system.icon}</div>
+                                        <div className="system-name">{system.name}</div>
+                                        <div className="system-count">{system.count} condições</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Render Conditions List
+            if (view === 'conditions') {
+                const systemData = systems.find(s => s.id === selectedSystem);
+                return (
+                    <div className="app-container">
+                        <div className="header">
+                            <button className="back-btn" onClick={() => setView('home')}>←</button>
+                            <div className="logo">💊</div>
+                            <div className="app-title">PHARMA BOOK</div>
+                        </div>
+                        <div className="content">
+                            <div className="breadcrumb">
+                                <span>{systemData.icon} {systemData.name}</span>
+                            </div>
+                            <div className="section-title">Todas as Condições ({systemData.count})</div>
+                            <div className="condition-list">
+                                {conditions[selectedSystem].map(condition => (
+                                    <div 
+                                        key={condition.id}
+                                        className="condition-item"
+                                        onClick={() => handleConditionClick(condition.id)}
+                                    >
+                                        <div className="condition-icon">📋</div>
+                                        <div className="condition-content">
+                                            <div className="condition-name">{condition.name}</div>
+                                            <div className="condition-desc">{condition.desc}</div>
+                                        </div>
+                                        <div>→</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Render Condition Detail
+            if (view === 'detail' && selectedCondition) {
+                const condition = conditionsData[selectedCondition];
+                
+                return (
+                    <div className="app-container">
+                        <div className="header">
+                            <button className="back-btn" onClick={() => setView('conditions')}>←</button>
+                            <div className="logo">💊</div>
+                            <div className="app-title">PHARMA BOOK</div>
+                        </div>
+                        <div className="detail-header">
+                            <div className="breadcrumb">
+                                <span>✨ {condition.system}</span>
+                            </div>
+                            <div className="condition-title">{condition.name}</div>
+                            <div className="condition-definition">{condition.definition}</div>
+                        </div>
+                        
+                        <div className="content">
+                            {/* Alicerce */}
+                            <div className="section-box yellow">
+                                <div className="section-header">
+                                    <div className="section-icon">💡</div>
+                                    <div className="section-name">Alicerce</div>
+                                </div>
+                                <div>
+                                    <strong>Causas Principais</strong>
+                                    {condition.causes.map((cause, i) => (
+                                        <div key={i} className="list-item">{cause}</div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Clínica */}
+                            <div className="section-box blue">
+                                <div className="section-header">
+                                    <div className="section-icon">🩺</div>
+                                    <div className="section-name">Clínica</div>
+                                </div>
+                                <div>
+                                    <strong>Objetivos do Tratamento</strong>
+                                    {condition.objectives.map((obj, i) => (
+                                        <div key={i} className="list-item">{obj}</div>
+                                    ))}
+                                </div>
+                                <div style={{marginTop: '16px'}}>
+                                    <strong>Sintomas Característicos</strong>
+                                    {condition.symptoms.map((symptom, i) => (
+                                        <div key={i} className="list-item">{symptom}</div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Sinais de Alerta */}
+                            <div className="alert-box">
+                                <div className="alert-header">
+                                    <span>⚠️</span>
+                                    <span>Sinais de Alerta (Checklist)</span>
+                                </div>
+                                <div className="alert-text">Verifique cada item antes de prosseguir com a prescrição</div>
+                                {condition.alertSigns.map((sign, i) => (
+                                    <div key={i} className="checkbox-item">
+                                        <input type="checkbox" />
+                                        <label className="checkbox-label">{sign}</label>
+                                    </div>
+                                ))}
+                            </div>
+
+                            <div className="section-box yellow">
+                                <div className="section-header">
+                                    <div className="section-icon">→</div>
+                                    <div className="section-name">Critérios de Encaminhamento ao Médico</div>
+                                </div>
+                                {condition.referralCriteria.map((criteria, i) => (
+                                    <div key={i} className="list-item">{criteria}</div>
+                                ))}
+                            </div>
+
+                            {/* Conduta Farmacêutica */}
+                            <div className="section-box green">
+                                <div className="section-header">
+                                    <div className="section-icon">💊</div>
+                                    <div className="section-name">Conduta Farmacêutica</div>
+                                </div>
+                                
+                                <strong>📋 Opções de Prescrição (MIPs)</strong>
+                                <div style={{marginTop: '12px'}}>
+                                    {condition.medications.map((med, index) => (
+                                        <div key={index} className="checkbox-item" onClick={() => toggleMedication(index)}>
+                                            <input 
+                                                type="checkbox" 
+                                                checked={selectedMedications.includes(index)}
+                                                onChange={() => {}}
+                                            />
+                                            <div className="checkbox-label">
+                                                <div className="medication-card">
+                                                    <div className="medication-name">{med.name}</div>
+                                                    <div className="medication-detail">
+                                                        <div className="medication-label">Concentração</div>
+                                                        <div className="medication-value">{med.concentration}</div>
+                                                    </div>
+                                                    <div className="medication-detail">
+                                                        <div className="medication-label">Posologia</div>
+                                                        <div className="medication-value">{med.posology}</div>
+                                                    </div>
+                                                    <div className="medication-detail">
+                                                        <div className="medication-label">Duração</div>
+                                                        <div className="medication-value">{med.duration}</div>
+                                                    </div>
+                                                    {med.mip && (
+                                                        <div className="medication-badge">
+                                                            🛡️ Medicamento validado como MIP pela ANVISA
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Medidas Não Farmacológicas */}
+                            <div className="section-box green">
+                                <div className="section-header">
+                                    <div className="section-icon">💚</div>
+                                    <div className="section-name">Medidas Não Farmacológicas</div>
+                                </div>
+                                {condition.nonPharmacological.map((measure, index) => (
+                                    <div key={index} className="checkbox-item" onClick={() => toggleNonPharma(index)}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selectedNonPharma.includes(index)}
+                                            onChange={() => {}}
+                                        />
+                                        <label className="checkbox-label">{measure}</label>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Orientações ao Paciente */}
+                            <div className="section-box blue">
+                                <div className="section-header">
+                                    <div className="section-icon">💬</div>
+                                    <div className="section-name">Orientações ao Paciente</div>
+                                </div>
+                                {condition.patientGuidance.map((guidance, index) => (
+                                    <div key={index} className="checkbox-item" onClick={() => toggleGuidance(index)}>
+                                        <input 
+                                            type="checkbox" 
+                                            checked={selectedGuidance.includes(index)}
+                                            onChange={() => {}}
+                                        />
+                                        <label className="checkbox-label">{guidance}</label>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Retorno à Farmácia */}
+                            <div className="section-box blue">
+                                <div className="section-header">
+                                    <div className="section-icon">🕐</div>
+                                    <div className="section-name">Retorno à Farmácia</div>
+                                </div>
+                                <div style={{marginBottom: '12px'}}>
+                                    <strong>Melhora Esperada</strong>
+                                    <div className="list-item">{condition.expectedImprovement}</div>
+                                </div>
+                                <div style={{marginBottom: '12px'}}>
+                                    <strong>Quando Retornar</strong>
+                                    <div className="list-item">{condition.whenToReturn}</div>
+                                </div>
+                                <div>
+                                    <strong>Interromper e Encaminhar</strong>
+                                    <div className="list-item">{condition.emergencyReferral}</div>
+                                </div>
+                            </div>
+
+                            {/* Pílulas Clínicas */}
+                            <div className="section-box purple">
+                                <div className="section-header">
+                                    <div className="section-icon">💡</div>
+                                    <div className="section-name">Pílulas Clínicas</div>
+                                </div>
+                                {condition.clinicalPearls.map((pearl, i) => (
+                                    <div key={i} className="list-item">{pearl}</div>
+                                ))}
+                            </div>
+
+                            {/* Botão Gerar Prescrição */}
+                            <button 
+                                className="button button-primary"
+                                onClick={() => setView('prescription')}
+                                disabled={selectedMedications.length === 0 && selectedNonPharma.length === 0}
+                                style={{opacity: (selectedMedications.length === 0 && selectedNonPharma.length === 0) ? 0.5 : 1}}
+                            >
+                                + Ver Opções e Gerar Prescrição
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            // Render Prescription View
+            if (view === 'prescription' && selectedCondition) {
+                const condition = conditionsData[selectedCondition];
+                
+                return (
+                    <div className="app-container">
+                        <div className="header">
+                            <button className="back-btn" onClick={() => setView('detail')}>←</button>
+                            <div className="logo">💊</div>
+                            <div className="app-title">PHARMA BOOK</div>
+                        </div>
+                        
+                        <div className="content">
+                            <div className="section-title">Prescrição - {condition.name}</div>
+                            
+                            {/* Preview da Prescrição */}
+                            {selectedMedications.length > 0 && (
+                                <div className="preview-section">
+                                    <div className="preview-title">MEDICAMENTOS SELECIONADOS</div>
+                                    {selectedMedications.map(index => {
+                                        const med = condition.medications[index];
+                                        return (
+                                            <div key={index} className="preview-item">
+                                                <strong>{med.name} {med.concentration}</strong><br/>
+                                                {med.posology} - {med.duration}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            )}
+
+                            {selectedNonPharma.length > 0 && (
+                                <div className="preview-section">
+                                    <div className="preview-title">MEDIDAS NÃO FARMACOLÓGICAS</div>
+                                    {selectedNonPharma.map(index => (
+                                        <div key={index} className="preview-item">
+                                            • {condition.nonPharmacological[index]}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {selectedGuidance.length > 0 && (
+                                <div className="preview-section">
+                                    <div className="preview-title">ORIENTAÇÕES AO PACIENTE</div>
+                                    {selectedGuidance.map(index => (
+                                        <div key={index} className="preview-item">
+                                            • {condition.patientGuidance[index]}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {/* Formulário Farmacêutico */}
+                            <div className="section-box green" style={{marginTop: '20px'}}>
+                                <div className="section-name" style={{marginBottom: '16px'}}>Dados do Farmacêutico</div>
+                                
+                                <div className="form-group">
+                                    <label className="form-label">Nome</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        value={pharmacistData.name}
+                                        onChange={(e) => setPharmacistData({...pharmacistData, name: e.target.value})}
+                                        placeholder="Nome completo"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">CRF</label>
+                                    <div style={{display: 'flex', gap: '8px'}}>
+                                        <input 
+                                            type="text" 
+                                            className="form-input"
+                                            style={{flex: 2}}
+                                            value={pharmacistData.crf}
+                                            onChange={(e) => setPharmacistData({...pharmacistData, crf: e.target.value})}
+                                            placeholder="Número"
+                                        />
+                                        <input 
+                                            type="text" 
+                                            className="form-input"
+                                            style={{flex: 1}}
+                                            value={pharmacistData.crfState}
+                                            onChange={(e) => setPharmacistData({...pharmacistData, crfState: e.target.value})}
+                                            placeholder="UF"
+                                            maxLength="2"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Especialidade</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        value={pharmacistData.specialty}
+                                        onChange={(e) => setPharmacistData({...pharmacistData, specialty: e.target.value})}
+                                        placeholder="Ex: Farmácia Clínica"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">WhatsApp</label>
+                                    <div className="input-with-button">
+                                        <input 
+                                            type="tel" 
+                                            className="form-input"
+                                            value={pharmacistData.whatsapp}
+                                            onChange={(e) => setPharmacistData({...pharmacistData, whatsapp: e.target.value})}
+                                            placeholder="(00) 00000-0000"
+                                        />
+                                        <button 
+                                            className="whatsapp-btn"
+                                            onClick={() => openWhatsApp(pharmacistData.whatsapp)}
+                                            disabled={!pharmacistData.whatsapp}
+                                        >
+                                            📱
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Formulário Paciente */}
+                            <div className="section-box blue" style={{marginTop: '20px'}}>
+                                <div className="section-name" style={{marginBottom: '16px'}}>Dados do Paciente</div>
+                                
+                                <div className="form-group">
+                                    <label className="form-label">Nome Completo</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        value={patientData.name}
+                                        onChange={(e) => setPatientData({...patientData, name: e.target.value})}
+                                        placeholder="Nome completo"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">CPF</label>
+                                    <input 
+                                        type="text" 
+                                        className="form-input"
+                                        value={patientData.cpf}
+                                        onChange={(e) => setPatientData({...patientData, cpf: e.target.value})}
+                                        placeholder="000.000.000-00"
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Data de Nascimento</label>
+                                    <input 
+                                        type="date" 
+                                        className="form-input"
+                                        value={patientData.birthdate}
+                                        onChange={(e) => setPatientData({...patientData, birthdate: e.target.value})}
+                                    />
+                                </div>
+
+                                <div className="form-group">
+                                    <label className="form-label">Telefone</label>
+                                    <div className="input-with-button">
+                                        <input 
+                                            type="tel" 
+                                            className="form-input"
+                                            value={patientData.phone}
+                                            onChange={(e) => setPatientData({...patientData, phone: e.target.value})}
+                                            placeholder="(00) 00000-0000"
+                                        />
+                                        <button 
+                                            className="whatsapp-btn"
+                                            onClick={() => openWhatsApp(patientData.phone)}
+                                            disabled={!patientData.phone}
+                                        >
+                                            📱
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Botões de Ação */}
+                            <div style={{marginTop: '24px'}}>
+                                <button 
+                                    className="button button-primary"
+                                    onClick={generatePDF}
+                                    disabled={!canGeneratePDF()}
+                                    style={{opacity: canGeneratePDF() ? 1 : 0.5}}
+                                >
+                                    📄 Gerar PDF da Prescrição
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                );
+            }
+
+            return null;
+        }
+
+        ReactDOM.render(<App />, document.getElementById('root'));
+    </script>
+</body>
+</html>
